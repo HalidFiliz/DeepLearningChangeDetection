@@ -1,0 +1,33 @@
+#generated except source/configuration files
+*.exe
+*.ilk
+*.lib
+*.dll
+*.pdb
+*.idb
+*.obj
+*.pch
+*.log
+*.tlog
+*.lastbuildstate
+*.opendb
+*.db
+*.db-shm
+*.db-wal
+*.suo
+*.ipch
+*.enc
+*.csv
+*.zip
+*.gz
+*.tif
+*.png
+*.TIF
+*.jp2
+*.xml
+*.aux
+*.geojson
+
+#folders
+Onera Satellite Change Detection dataset - Train Labels
+Onera Satellite Change Detection dataset - Images
