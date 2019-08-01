@@ -104,14 +104,14 @@ i1, i2, l1 = read_whole_data(train_files, resize_to_gt = True)
 #    ax6.imshow( np.dstack((i2[idx][:,:,0], i2[idx][:,:,1], i2[idx][:,:,2])) )
 #%%
 class batcher:
-    def __init__(self, width = 224, height = 224, itype = np.float32, normalize = True, aug = ['randRot','flipv', 'fliph']):
+    def __init__(self, width = 224, height = 224, itype = np.float32, normalize = True):
         self.batch_idx = 0
         self.w  = width
         self.h  = height
         self.dt = itype
         self.nor= normalize
         
-    def buildBatches(self, listIm1, listIm2, labels, hStep=1, wStep=1 ):
+    def buildBatches(self, listIm1, listIm2, labels, hStep=1, wStep=1, aug = ['randomRotation','flipv', 'fliph', 'clahe', 'rescale'] ):
         self.Imgs = []
         self.Lbls = []
         self.channelCount = listIm1[0].shape[2]
@@ -154,18 +154,34 @@ class batcher:
                                             im2[hStart:hStop, wStart:wStop, :], \
                                             np.abs(im1[hStart:hStop, wStart:wStop, :] - im2[hStart:hStop, wStart:wStop, :])))
                         
-                        ll = labels[i][hStart:hStop, wStart:wStop, :]
+                        ll = labels[i][hStart:hStop, wStart:wStop, :].astype(self.dt) / 255.
                         
                         self.Imgs.append(zipped)
                         self.Lbls.append(ll)
                         
-                        if 'randRot' in aug:
-                            degree = np.random.randint(0, 360)
-                            zipped = rotate(zipped, degree)
-                            ll = rotate(ll, degree)
-                            self.Imgs.append(zipped)
+                        if 'randomRotation' in aug:
+                            degree = np.random.randint(15, 350)
+                            ir = rotate_multi(zipped, degree)
+                            lr = rotate_multi(ll, degree)
+                            self.Imgs.append( ir)
+                            self.Lbls.append( lr)
+
+                        if 'flipv' in aug:
+                            self.Imgs.append(flipv(zipped))
+                            self.Lbls.append(flipv(ll))
+
+                        if 'fliph' in aug:
+                            self.Imgs.append(fliph(zipped))
+                            self.Lbls.append(fliph(ll))
+
+                        if 'clahe' in aug:
+                            self.Imgs.append(equalizeAdaptHisto_multi(zipped))
                             self.Lbls.append(ll)
                         
+                        if 'rescale' in aug:
+                            self.Imgs.append(rescale_intensity_multi(zipped))
+                            self.Lbls.append(ll)
+                            
     def giveBatch(self, batchNum ):
         self.batch_idx += batchNum
         if self.batch_idx > len(self.Imgs):
@@ -187,7 +203,7 @@ a, b = bat.giveBatch(1)
 for idx in range( len(a) ):
     print(train_files[idx])
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize = (15, 15))
-    ax1.imshow( color2Gray( a[idx,:,:,0:3]) )
+    ax1.imshow( a[idx,:,:,0:3] )
     ax2.imshow( color2Gray( a[idx,:,:,3:6]) )
     ax3.imshow(b[idx,:,:,0])
     ax4.imshow(b[idx,:,:,1])

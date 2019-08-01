@@ -68,16 +68,32 @@ def equalizeHisto(img, bins=256):
     exposure.equalize_hist(img, nbins = bins)
     return img 
 
+#clahe
+def equalizeAdaptHisto_multi(img):
+    c = img.shape[-1]
+    retMat = np.zeros( img.shape, img.dtype )
+    for i in range(c):
+        retMat[:,:,i] = equalizeAdaptHisto(img[:,:,i])
+    
+    return retMat
+
 def equalizeAdaptHisto(img):
     return exposure.equalize_adapthist(img, clip_limit=0.03)
 
 def histo(img, bins):
     return exposure.histogram(img, nbins = bins)
 
+def rotate_multi(img, angle, interpolation='cubic'):
+    c = img.shape[-1]
+    retMat = np.zeros( img.shape, img.dtype )
+    
+    for i in range(c):
+        retMat[:,:,i] = rotate(img[:,:,i], angle, interpolation)
+    
+    return retMat
+
 def rotate(img, angle, interpolation='cubic'):
-    
     imgnew = imrotate(img, angle, interp=interpolation)
-    
     return imgnew
 
 """     'constant'
@@ -113,11 +129,20 @@ def rotate(img, angle, interpolation='cubic'):
         <function>
             Padding function, see Notes."""
 
-def padding(img, width, mode):
+def rescale_intensity_multi(img):
+    c = img.shape[-1]
+    retMat = np.zeros( img.shape, img.dtype ) 
+    for i in range(c):
+        retMat[:,:,i] = exposure.rescale_intensity(img[:,:,i])
     
-    img = np.pad(img, width, mode)
-    
+    return retMat
+
+def zeroPadding(img, borderWidth):
+    img[:img.shape[0],:img.shape[1]] = 0
     return img
+
+def padding(img, width, mode='constant'):
+    return np.pad(img, width, mode)
 
 def gausfilt(img, sig=1):
     imgnew = gaussian_filter(img, sigma=sig)
