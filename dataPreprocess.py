@@ -6,14 +6,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import scipy.io as sio
-
 from skimage.io import imread
-#from skimage.color import rgb2gray, rgb2lab, lab2rgb
-#from scipy.misc import imsave as imsave
-#from skimage.transform import resize
-#from skimage.filters import gaussian
-
 import cv2
+
+from data_augment import *
 
 tf.reset_default_graph()
 #%%
@@ -108,7 +104,7 @@ i1, i2, l1 = read_whole_data(train_files, resize_to_gt = True)
 #    ax6.imshow( np.dstack((i2[idx][:,:,0], i2[idx][:,:,1], i2[idx][:,:,2])) )
 #%%
 class batcher:
-    def __init__(self, width = 224, height = 224, itype = np.float32, normalize = True):
+    def __init__(self, width = 224, height = 224, itype = np.float32, normalize = True, aug = ['randRot','flipv', 'fliph']):
         self.batch_idx = 0
         self.w  = width
         self.h  = height
@@ -163,13 +159,35 @@ class batcher:
                         self.Imgs.append(zipped)
                         self.Lbls.append(ll)
                         
+                        if 'randRot' in aug:
+                            degree = np.random.randint(0, 360)
+                            zipped = rotate(zipped, degree)
+                            ll = rotate(ll, degree)
+                            self.Imgs.append(zipped)
+                            self.Lbls.append(ll)
+                        
     def giveBatch(self, batchNum ):
         self.batch_idx += batchNum
+        if self.batch_idx > len(self.Imgs):
+            self.batch_idx = batchNum
+            
         return np.asarray( self.Imgs[self.batch_idx - batchNum : self.batch_idx] ), np.asarray( self.Lbls[self.batch_idx - batchNum:self.batch_idx] )
         
+    def giveSize(self):
+        return len(self.Imgs)
+    
 bat = batcher(224,224)
 bat.buildBatches(i1, i2, l1, 200, 200)
 
 del i1
 del i2 
 del l1
+#%%
+a, b = bat.giveBatch(1)
+for idx in range( len(a) ):
+    print(train_files[idx])
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize = (15, 15))
+    ax1.imshow( color2Gray( a[idx,:,:,0:3]) )
+    ax2.imshow( color2Gray( a[idx,:,:,3:6]) )
+    ax3.imshow(b[idx,:,:,0])
+    ax4.imshow(b[idx,:,:,1])

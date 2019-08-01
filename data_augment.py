@@ -10,15 +10,15 @@ from scipy.misc import imresize, imrotate
 from skimage import exposure
 from scipy.ndimage import gaussian_filter
 
-def Color2Gray(img):
+def color2Gray(img):
     r, g, b = img[:,:,0], img[:,:,1], img[:,:,2]
     gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
 
-    img[:,:,0], img[:,:,1], img[:,:,2] = gray, gray, gray
-    
-    return img
+    #img[:,:,0], img[:,:,1], img[:,:,2] = gray, gray, gray
+    img[:,:,0]= gray
+    return img[:,:,0]
 
-def SwapChannels(img,x=0,y=2):
+def swapChannels(img,x=0,y=2):
     
     (img[:,:x], img[:,:,y]) = (img[:,:,y], img[:,:,x])
     
@@ -64,14 +64,14 @@ def normalize(img,x="norm8bit"):
     elif x == "norm8bit":
         return img/255
 
-def equalize(img, bins):
-    
+def equalizeHisto(img, bins=256):
     exposure.equalize_hist(img, nbins = bins)
-    
     return img 
 
+def equalizeAdaptHisto(img):
+    return exposure.equalize_adapthist(img, clip_limit=0.03)
+
 def histo(img, bins):
-    
     return exposure.histogram(img, nbins = bins)
 
 def rotate(img, angle, interpolation='cubic'):
