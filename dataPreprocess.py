@@ -17,9 +17,11 @@ images_folder = "./Onera Satellite Change Detection dataset - Images"
 labels_folder = "./Onera Satellite Change Detection dataset - Train Labels"
 
 train_txt = os.path.join(images_folder, "train.txt")
+valid_txt = os.path.join(images_folder, "valid.txt")
 test_txt = os.path.join(images_folder, "test.txt")
 
 train_files = pd.read_csv(train_txt, sep=',', header=None).as_matrix().flatten()
+valid_files = pd.read_csv(valid_txt, sep=',', header=None).as_matrix().flatten()
 test_files = pd.read_csv(test_txt, sep=',', header=None).as_matrix().flatten()
 
 #%%
@@ -91,7 +93,7 @@ def read_whole_data(fileList, resize_to_gt = True):
     return im_1, im_2, label
     
 i1, i2, l1 = read_whole_data(train_files, resize_to_gt = True)
-
+vi1, vi2, vl1 = read_whole_data(valid_files, resize_to_gt = True)
 #%%
 #for idx in range( len(i1) ):
 #    print(train_files[idx])
@@ -195,11 +197,17 @@ class batcher:
 bat = batcher(224,224)
 bat.buildBatches(i1, i2, l1, 200, 200)
 
+batv = batcher(224,224)
+batv.buildBatches(vi1, vi2, vl1, 200, 200)
+
 del i1
 del i2 
 del l1
+del vi1
+del vi2
+del vl1
 #%%
-a, b = bat.giveBatch(1)
+a, b = bat.giveBatch(10)
 for idx in range( len(a) ):
     print(train_files[idx])
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize = (15, 15))
