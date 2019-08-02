@@ -27,7 +27,7 @@ test_files = pd.read_csv(test_txt, sep=',', header=None).as_matrix().flatten()
 #%%
 # read whole data
 
-selected_bands = ['B02.tif', 'B03.tif', 'B04.tif']
+selected_bands = ['B02.tif', 'B03.tif', 'B04.tif', 'B11.tif']
 
 def read_whole_data(fileList, resize_to_gt = True):
     fileList = train_files
