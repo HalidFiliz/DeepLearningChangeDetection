@@ -27,7 +27,7 @@ test_files = pd.read_csv(test_txt, sep=',', header=None).as_matrix().flatten()
 #%%
 # read whole data
 
-selected_bands = ['B02.tif', 'B03.tif', 'B04.tif', 'B11.tif']
+selected_bands = ['B02.tif', 'B03.tif', 'B04.tif', 'B05.tif']
 
 def read_whole_data(fileList, resize_to_gt = True):
     fileList = train_files
@@ -113,7 +113,7 @@ class batcher:
         self.dt = itype
         self.nor= normalize
         
-    def buildBatches(self, listIm1, listIm2, labels, hStep=1, wStep=1, aug = ['randomRotation','flipv', 'fliph', 'clahe', 'rescale'] ):
+    def buildBatches(self, listIm1, listIm2, labels, hStep=1, wStep=1, aug = ['flipv', 'fliph'] ):
         self.Imgs = []
         self.Lbls = []
         self.channelCount = listIm1[0].shape[2]
@@ -195,10 +195,10 @@ class batcher:
         return len(self.Imgs)
     
 bat = batcher(224,224)
-bat.buildBatches(i1, i2, l1, 200, 200)
+bat.buildBatches(i1, i2, l1, 50, 50)
 
 batv = batcher(224,224)
-batv.buildBatches(vi1, vi2, vl1, 200, 200)
+batv.buildBatches(vi1, vi2, vl1, 100, 100)
 
 del i1
 del i2 
