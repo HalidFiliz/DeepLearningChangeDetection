@@ -1,0 +1,23 @@
+selected_bands = ['B02.tif', 'B03.tif', 'B04.tif', 'B05.tif']
+aug = ['flipv', 'fliph']
+
+bat = batcher(224,224)
+bat.buildBatches(i1, i2, l1, 50, 50)
+
+batv = batcher(224,224)
+batv.buildBatches(vi1, vi2, vl1, 100, 100)
+
+efn = EarlyFusionNetwork.earlyFusionNetwork()
+loss =  tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=xop, labels=xo))
+optimizerc = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
+
+
+learning_rate  = 0.0001
+epoch = 2000
+batch_size = 12
+
+width   = 224
+height  = 224
+
+channel = 12
+nclass  = 2

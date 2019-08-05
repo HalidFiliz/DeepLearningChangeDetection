@@ -31,3 +31,6 @@
 #folders
 Onera Satellite Change Detection dataset - Train Labels
 Onera Satellite Change Detection dataset - Images
+checkpoints
+logs
+output

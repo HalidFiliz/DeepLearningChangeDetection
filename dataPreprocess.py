@@ -28,9 +28,8 @@ test_files = pd.read_csv(test_txt, sep=',', header=None).as_matrix().flatten()
 # read whole data
 
 selected_bands = ['B02.tif', 'B03.tif', 'B04.tif', 'B05.tif']
-
-def read_whole_data(fileList, resize_to_gt = True):
-    fileList = train_files
+        
+def read_whole_data(fileList, resize_to_gt = True, for_train = True):
     resize_to_gt = True
     im_1 = []
     im_2 = []
@@ -92,18 +91,9 @@ def read_whole_data(fileList, resize_to_gt = True):
         
     return im_1, im_2, label
     
-i1, i2, l1 = read_whole_data(train_files, resize_to_gt = True)
-vi1, vi2, vl1 = read_whole_data(valid_files, resize_to_gt = True)
-#%%
-#for idx in range( len(i1) ):
-#    print(train_files[idx])
-#    fig, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(1, 6, figsize = (10, 10))
-#    ax1.imshow(i1[idx][:,:,0])
-#    ax2.imshow(i2[idx][:,:,0])
-#    ax3.imshow(l1[idx][:,:,0])
-#    ax4.imshow(l1[idx][:,:,1])
-#    ax5.imshow( np.dstack((i1[idx][:,:,0], i1[idx][:,:,1], i1[idx][:,:,2])) )
-#    ax6.imshow( np.dstack((i2[idx][:,:,0], i2[idx][:,:,1], i2[idx][:,:,2])) )
+i1, i2, l1 = read_whole_data(train_files, resize_to_gt = True, for_train = True)
+vi1, vi2, vl1 = read_whole_data(valid_files, resize_to_gt = True, for_train = True)
+
 #%%
 class batcher:
     def __init__(self, width = 224, height = 224, itype = np.float32, normalize = True):
@@ -155,6 +145,8 @@ class batcher:
                         zipped = np.dstack((im1[hStart:hStop, wStart:wStop, :], \
                                             im2[hStart:hStop, wStart:wStop, :], \
                                             np.abs(im1[hStart:hStop, wStart:wStop, :] - im2[hStart:hStop, wStart:wStop, :])))
+#                        zipped = np.dstack((im1[hStart:hStop, wStart:wStop, :], \
+#                                            im2[hStart:hStop, wStart:wStop, :] ))
                         
                         ll = labels[i][hStart:hStop, wStart:wStop, :].astype(self.dt) / 255.
                         
@@ -194,6 +186,9 @@ class batcher:
     def giveSize(self):
         return len(self.Imgs)
     
+    def giveChannelCount(self):
+        return self.Imgs[-1].shape[-1]
+    
 bat = batcher(224,224)
 bat.buildBatches(i1, i2, l1, 50, 50)
 
@@ -207,11 +202,34 @@ del vi1
 del vi2
 del vl1
 #%%
-a, b = bat.giveBatch(10)
-for idx in range( len(a) ):
-    print(train_files[idx])
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize = (15, 15))
-    ax1.imshow( a[idx,:,:,0:3] )
-    ax2.imshow( color2Gray( a[idx,:,:,3:6]) )
-    ax3.imshow(b[idx,:,:,0])
-    ax4.imshow(b[idx,:,:,1])
+#a, b = bat.giveBatch(10)
+#for idx in range( len(a) ):
+#    print(train_files[idx])
+#    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize = (15, 15))
+#    ax1.imshow( a[idx,:,:,0:3] )
+#    ax2.imshow( color2Gray( a[idx,:,:,3:6]) )
+#    ax3.imshow(b[idx,:,:,0])
+#    ax4.imshow(b[idx,:,:,1])
+
+#%%
+def create_test_pile(t1, t2):
+    test_imgs = []
+    for i in range( len(t1) ):
+        typeMax = np.iinfo(t1[i].dtype).max
+        im1 = t1[i].astype(np.float32)
+        im2 = t2[i].astype(np.float32)
+        
+        im1 = im1/(typeMax)
+        im2 = im2/(typeMax)
+        
+        zipped = np.dstack((im1, im2, np.abs(im1- im2) ))
+        test_imgs.append(zipped)
+        
+    return test_imgs
+
+
+m1, m2, _ = read_whole_data(test_files, resize_to_gt = True, for_train = False)
+test_images = create_test_pile(m1,m2)
+
+del m1
+del m2
