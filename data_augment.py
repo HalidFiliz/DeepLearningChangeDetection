@@ -137,12 +137,64 @@ def rescale_intensity_multi(img):
     
     return retMat
 
-def zeroPadding(img, borderWidth):
-    img[:img.shape[0],:img.shape[1]] = 0
-    return img
-
-def padding(img, width, mode='constant'):
-    return np.pad(img, width, mode)
+def paddingReflect(img, hStart, hStop, wStart, wStop, type = 1): # type 0-1-2-3
+    output = np.zeros(img.shape, img.dtype)
+    if type == 0:
+        output[0:(hStop-hStart), 0:(wStop-wStart), :] = img[hStart:hStop, wStart:wStop, :] 
+        
+        idx = (wStop-wStart)-1
+        for ww in range((wStop-wStart), img.shape[1], 1):
+            output[:,ww,:] = output[:,idx,:]
+            idx -= 1
+            
+        idx = (hStop-hStart)-1
+        for hh in range((hStop-hStart), img.shape[0], 1):
+            output[hh,:,:] = output[idx,:,:]
+            idx -= 1
+    
+    if type == 1:
+        img = img[hStart:hStop, wStart:wStop, :] 
+        output[0:img.shape[0] , (output.shape[1]-img.shape[1]):output.shape[1], :] = img
+        
+        idx = (output.shape[1]-img.shape[1])+1
+        for ww in range( (output.shape[1]-img.shape[1]), 0, -1):
+            output[:,ww,:] = output[:,idx,:]
+            idx += 1
+        
+        idx = img.shape[0]
+        for hh in range( img.shape[0], output.shape[0], 1):
+            output[hh,:,:] = output[idx,:,:]
+            idx -= 1
+    
+    if type == 2:
+        img = img[hStart:hStop, wStart:wStop, :] 
+        output[(output.shape[0]-img.shape[0]):output.shape[0] ,0:img.shape[1] , :] = img
+        
+        idx = (output.shape[0]-img.shape[0])+1
+        for hh in range( (output.shape[0]-img.shape[0]), 0, -1):
+            output[hh,:,:] = output[idx,:,:]
+            idx += 1
+      
+        idx = img.shape[1]-1
+        for ww in range( img.shape[1], output.shape[1], 1):
+            output[:,ww,:] = output[:,idx,:]
+            idx -= 1
+            
+    if type == 3:
+        img = img[hStart:hStop, wStart:wStop, :] 
+        output[(output.shape[0]-img.shape[0]):output.shape[0] , (output.shape[1]-img.shape[1]):output.shape[1], :] = img
+            
+        idx = (output.shape[1]-img.shape[1])+1
+        for ww in range( (output.shape[1]-img.shape[1]), 0, -1):
+            output[:,ww,:] = output[:,idx,:]
+            idx += 1
+        
+        idx = (output.shape[0]-img.shape[0])+1
+        for hh in range( (output.shape[0]-img.shape[0]), 0, -1):
+            output[hh,:,:] = output[idx,:,:]
+            idx += 1
+            
+    return output
 
 def gausfilt(img, sig=1):
     imgnew = gaussian_filter(img, sigma=sig)

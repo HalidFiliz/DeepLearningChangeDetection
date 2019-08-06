@@ -202,34 +202,34 @@ del vi1
 del vi2
 del vl1
 #%%
-#a, b = bat.giveBatch(10)
-#for idx in range( len(a) ):
-#    print(train_files[idx])
-#    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize = (15, 15))
-#    ax1.imshow( a[idx,:,:,0:3] )
-#    ax2.imshow( color2Gray( a[idx,:,:,3:6]) )
-#    ax3.imshow(b[idx,:,:,0])
-#    ax4.imshow(b[idx,:,:,1])
+a, b = bat.giveBatch(10)
+for idx in range( len(a) ):
+    print(train_files[idx])
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize = (15, 15))
+    ax1.imshow( color2Gray(a[idx,:,:,0:3]) )
+    ax2.imshow( color2Gray( a[idx,:,:,3:6]) )
+    ax3.imshow(b[idx,:,:,0])
+    ax4.imshow(b[idx,:,:,1])
 
 #%%
-def create_test_pile(t1, t2):
-    test_imgs = []
-    for i in range( len(t1) ):
-        typeMax = np.iinfo(t1[i].dtype).max
-        im1 = t1[i].astype(np.float32)
-        im2 = t2[i].astype(np.float32)
-        
-        im1 = im1/(typeMax)
-        im2 = im2/(typeMax)
-        
-        zipped = np.dstack((im1, im2, np.abs(im1- im2) ))
-        test_imgs.append(zipped)
-        
-    return test_imgs
-
-
-m1, m2, _ = read_whole_data(test_files, resize_to_gt = True, for_train = False)
-test_images = create_test_pile(m1,m2)
-
-del m1
-del m2
+#def create_test_pile(t1, t2):
+#    test_imgs = []
+#    for i in range( len(t1) ):
+#        typeMax = np.iinfo(t1[i].dtype).max
+#        im1 = t1[i].astype(np.float32)
+#        im2 = t2[i].astype(np.float32)
+#        
+#        im1 = im1/(typeMax)
+#        im2 = im2/(typeMax)
+#        
+#        zipped = np.dstack((im1, im2, np.abs(im1- im2) ))
+#        test_imgs.append(zipped)
+#        
+#    return test_imgs
+#
+#
+#m1, m2, _ = read_whole_data(test_files, resize_to_gt = True, for_train = False)
+#test_images = create_test_pile(m1,m2)
+#
+#del m1
+#del m2
