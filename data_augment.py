@@ -161,7 +161,7 @@ def paddingReflect(img, hStart, hStop, wStart, wStop, type = 1): # type 0-1-2-3
             output[:,ww,:] = output[:,idx,:]
             idx += 1
         
-        idx = img.shape[0]
+        idx = img.shape[0]-1
         for hh in range( img.shape[0], output.shape[0], 1):
             output[hh,:,:] = output[idx,:,:]
             idx -= 1

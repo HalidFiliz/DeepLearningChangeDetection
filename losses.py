@@ -17,13 +17,21 @@ def classification_loss(logit, label) :
 	
 
 # https://lars76.github.io/neural-networks/object-detection/losses-for-segmentation/
-def dice_loss(y_true, y_pred):
-	numerator = 2 * tf.reduce_sum(y_true * y_pred)
-	# some implementations don't square y_pred
-	denominator = tf.reduce_sum(y_true + tf.square(y_pred))
 
+def dice_loss(y_true, y_pred):
+	denominator = tf.reduce_sum(y_true + tf.square(y_pred))
+	numerator = 2 * tf.reduce_sum(y_true * y_pred) # some implementations don't square y_pred
 	return numerator / (denominator + tf.keras.backend.epsilon())
-  
+    
+
+
+#return tf.nn.tf.reduce_mean( numerator / (denominator + tf.keras.backend.epsilon()) )
+    
+
+
+def custom_loss(y_true, y_pred):
+    return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred)) - tf.log(dice_loss(y_true, y_pred))
+
 def tversky_loss(beta):
 	def loss(y_true, y_pred):
 		numerator = tf.reduce_sum(y_true * y_pred)

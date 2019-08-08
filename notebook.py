@@ -9,8 +9,8 @@ from data_augment import *
 from skimage.io import imread
 import matplotlib.pyplot as plt
 
-a = 'C:/Users/memo/Desktop/DeepLearningChangeDetection/Onera Satellite Change Detection dataset - Train Labels/valencia/cm/cm.png'
+a = 'Onera Satellite Change Detection dataset - Train Labels/valencia/cm/cm.png'
 
 img = imread(a)
 
-plt.imshow( paddingReflect(img, 200, 450, 200, 450, type =3) )
+plt.imshow( paddingReflect(img, 100, 300, 100, 300, type =0) )

@@ -20,20 +20,20 @@ log_dir = './logs'
 model_name= 'EarlyFusion'
 summary_counter = 1
 
-learning_rate  = 0.0001
-epoch = 2000
-batch_size = 12
+learning_rate  = 0.0012
+epoch = 100
+batch_size = 32
+patience = 8
 
-width   = 224
-height  = 224
-
+width   = 112
+height  = 112
 channel = bat.giveChannelCount()
 nclass  = 2
 
 iteration = bat.giveSize() // batch_size
 
 def model_dir():
-    return "{}_{}_{}".format(model_name, batch_size, learning_rate)
+    return "{}_{}".format(model_name, batch_size)
 
 def save(checkpoint_dir, step):
     checkpoint_dir = os.path.join(checkpoint_dir, model_dir())
@@ -61,20 +61,23 @@ def load(checkpoint_dir):
 #%%
 xi = tf.placeholder("float", [batch_size, width, height, channel])
 xo = tf.placeholder("float", [batch_size, width, height, nclass])
-btrain = tf.placeholder("bool", None)
+lr = tf.placeholder("float", name="learning_rate")
+keep_prob = tf.placeholder("float", name='keep_prob')
 
 efn = EarlyFusionNetwork.earlyFusionNetwork()
-efn.build(xi, nclass)
+efn.build(xi, nclass, keep_prob)
 
-xop  = efn.deconv_4_2
+xop  = efn.deconv_4_3
 xops = tf.nn.softmax(xop, name='y_pred')
 
-loss, acc =  classification_loss(logit=xop, label=xo)
+loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=xo, logits=xop))
 
-optimizerc = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
+optimizerc = tf.train.AdamOptimizer(learning_rate=lr).minimize(loss)
+#optimizerc = tf.train.RMSPropOptimizer(learning_rate=learning_rate, decay=0.995).minimize(loss)
+
 train_loss =[]
 valid_loss =[]
-valid_acc =[]
+valid_good_loss =[]
 
 saver = tf.train.Saver()
 
@@ -83,6 +86,8 @@ with tf.Session() as sess:
                 
         writer = tf.summary.FileWriter(log_dir + '/' + model_dir(), sess.graph)
         
+        best_loss = 1.0
+        notImproved = 0
         could_load, checkpoint_counter = load(checkpoint_dir)   
         if could_load:
             start_epoch = checkpoint_counter
@@ -97,18 +102,23 @@ with tf.Session() as sess:
             print(" [!] Load failed...")
             
         for epoch in range(start_epoch, epoch):
+            
+            if notImproved == patience:
+                learning_rate = learning_rate*0.5
+                notImproved = 0
+                print("learnin rate decreased to " + str(learning_rate))
+            
             for batsi in range(start_batch_id, int((bat.giveSize())/batch_size)):
                 
                 trdata, trlabel = bat.giveBatch(batch_size)
-                _, cl, ac  = sess.run([optimizerc, loss, acc], feed_dict={xi: trdata, xo: trlabel})            
+                _, cl  = sess.run([optimizerc, loss], feed_dict={xi: trdata, xo: trlabel, lr:learning_rate, keep_prob:0.5})            
 
             train_loss.append(cl)
             
             batch_xi, batch_xo = batv.giveBatch(batch_size)       
-            pred, v_loss, v_acc = sess.run([xops, loss, acc], feed_dict={xi: batch_xi, xo: batch_xo})
+            pred, v_loss = sess.run([xops, loss], feed_dict={xi: batch_xi, xo: batch_xo, keep_prob:1.0})
             
             valid_loss.append(v_loss)
-            valid_acc.append(v_acc)
             
             for idx, im in enumerate(pred):
                 imsave('test/img' + str(idx) + '_' + str(0) + '_pred.png', im[:,:,0]*255.)
@@ -122,15 +132,26 @@ with tf.Session() as sess:
             
             start_batch_id = 0
             summary_counter += 1
-            save(checkpoint_dir, summary_counter)
-            
+            if v_loss < best_loss:
+                print("best loss is " + str(v_loss))
+                best_loss = v_loss
+                valid_good_loss.append(v_loss)
+                
+                save(checkpoint_dir, summary_counter)
+                
+                notImproved = 0
+            else:
+                print("loss did not improved")
+                notImproved = notImproved + 1
+                
             print("Epoch " + str(epoch) + ", Minibatch Los= " + \
-                     "{:.6f}".format(cl) + " , Val Los= {:.6f}".format(v_loss) + " , Val Acc= {:.6f}".format(v_acc) ) 
+                     "{:.6f}".format(cl) + " , Val Los= {:.6f}".format(v_loss) ) 
             
         save(checkpoint_dir, summary_counter)
             
 plt.plot(train_loss)        
 plt.plot(valid_loss)
+plt.plot(valid_good_loss)
 
 #%%
 with tf.Session() as sess:
@@ -168,7 +189,7 @@ with tf.Session() as sess:
                     for idx in range(len(target_batch)):
                         target_batch[idx,...] = target_img[hStart:hStop, wStart:wStop, :]
                         
-                    pred_test, = sess.run([xops], feed_dict={xi: target_batch})
+                    pred_test, = sess.run([xops], feed_dict={xi: target_batch, keep_prob:1.0})
                     output_image[hStart:hStop, wStart:wStop] = pred_test[0,...,0]
                     
             imsave('output/img' + str(i) + '_result.tif', output_image)

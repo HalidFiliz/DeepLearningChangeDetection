@@ -27,7 +27,7 @@ test_files = pd.read_csv(test_txt, sep=',', header=None).as_matrix().flatten()
 #%%
 # read whole data
 
-selected_bands = ['B02.tif', 'B03.tif', 'B04.tif', 'B05.tif']
+selected_bands = ['B02.tif', 'B03.tif', 'B04.tif']
         
 def read_whole_data(fileList, resize_to_gt = True, for_train = True):
     resize_to_gt = True
@@ -103,7 +103,7 @@ class batcher:
         self.dt = itype
         self.nor= normalize
         
-    def buildBatches(self, listIm1, listIm2, labels, hStep=1, wStep=1, aug = ['flipv', 'fliph'] ):
+    def buildBatches(self, listIm1, listIm2, labels, hStep=1, wStep=1, aug = ['flipv', 'fliph', 'flipflip', 'reflect0', 'reflect1', 'reflect2', 'reflect3'] ):
         self.Imgs = []
         self.Lbls = []
         self.channelCount = listIm1[0].shape[2]
@@ -142,23 +142,16 @@ class batcher:
                             wStop = ww + self.w
 #                        print(str(wStart) + ' - ' + str(wStop) )  
                         
-                        zipped = np.dstack((im1[hStart:hStop, wStart:wStop, :], \
-                                            im2[hStart:hStop, wStart:wStop, :], \
-                                            np.abs(im1[hStart:hStop, wStart:wStop, :] - im2[hStart:hStop, wStart:wStop, :])))
 #                        zipped = np.dstack((im1[hStart:hStop, wStart:wStop, :], \
-#                                            im2[hStart:hStop, wStart:wStop, :] ))
+#                                            im2[hStart:hStop, wStart:wStop, :], \
+#                                            np.abs(im1[hStart:hStop, wStart:wStop, :] - im2[hStart:hStop, wStart:wStop, :])))
+                        zipped = np.dstack((im1[hStart:hStop, wStart:wStop, :], \
+                                            im2[hStart:hStop, wStart:wStop, :] ))
                         
                         ll = labels[i][hStart:hStop, wStart:wStop, :].astype(self.dt) / 255.
                         
                         self.Imgs.append(zipped)
                         self.Lbls.append(ll)
-                        
-                        if 'randomRotation' in aug:
-                            degree = np.random.randint(15, 350)
-                            ir = rotate_multi(zipped, degree)
-                            lr = rotate_multi(ll, degree)
-                            self.Imgs.append( ir)
-                            self.Lbls.append( lr)
 
                         if 'flipv' in aug:
                             self.Imgs.append(flipv(zipped))
@@ -175,6 +168,26 @@ class batcher:
                         if 'rescale' in aug:
                             self.Imgs.append(rescale_intensity_multi(zipped))
                             self.Lbls.append(ll)
+                        
+                        if 'reflect0' in aug:
+                            self.Imgs.append(paddingReflect(zipped, 50, 112, 50, 112, type =0))
+                            self.Lbls.append(paddingReflect(ll, 50, 112, 50, 112, type =0))
+                        
+                        if 'reflect1' in aug:
+                            self.Imgs.append(paddingReflect(zipped, 40, 112, 40, 112, type =1))
+                            self.Lbls.append(paddingReflect(ll, 40, 112, 40, 112, type =1))
+                        
+                        if 'reflect2' in aug:
+                            self.Imgs.append(paddingReflect(zipped, 50, 112, 50, 112, type =2))
+                            self.Lbls.append(paddingReflect(ll, 50, 112, 50, 112, type =2))
+                        
+                        if 'reflect3' in aug:
+                            self.Imgs.append(paddingReflect(zipped, 40, 112, 40, 112, type =3))
+                            self.Lbls.append(paddingReflect(ll, 40, 112, 40, 112, type =3))
+                        
+                        if 'flipflip' in aug:
+                            self.Imgs.append(fliph(flipv(zipped)))
+                            self.Lbls.append(fliph(flipv(ll)))
                             
     def giveBatch(self, batchNum ):
         self.batch_idx += batchNum
@@ -189,10 +202,10 @@ class batcher:
     def giveChannelCount(self):
         return self.Imgs[-1].shape[-1]
     
-bat = batcher(224,224)
+bat = batcher(112,112)
 bat.buildBatches(i1, i2, l1, 50, 50)
 
-batv = batcher(224,224)
+batv = batcher(112,112)
 batv.buildBatches(vi1, vi2, vl1, 100, 100)
 
 del i1
@@ -202,9 +215,8 @@ del vi1
 del vi2
 del vl1
 #%%
-a, b = bat.giveBatch(10)
+a, b = batv.giveBatch(20)
 for idx in range( len(a) ):
-    print(train_files[idx])
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize = (15, 15))
     ax1.imshow( color2Gray(a[idx,:,:,0:3]) )
     ax2.imshow( color2Gray( a[idx,:,:,3:6]) )
@@ -233,3 +245,6 @@ for idx in range( len(a) ):
 #
 #del m1
 #del m2
+
+"""Data augmentation includes things like randomly rotating the image, zooming in, adding a color filter etc. 
+Data augmentation only happens to the training set and not on the validation/test set"""

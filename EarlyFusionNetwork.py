@@ -9,13 +9,15 @@ class earlyFusionNetwork:
     def __init__(self):
          print("class created")
          
-    def build(self, im1, nclass):
+    def build(self, im1, nclass, keep_prob):
 	
         start_time = time.time()
         print("build model started")
 
         self.conv_1_1 = self.convBatchnormRelu(im1, 16, 3, name= 'conv_1_1')
+        
         self.conv_1_2 = self.convBatchnormRelu(self.conv_1_1, 16, 3, name= 'conv_1_2')
+        
         self.maxPool_1= self.max_pool(self.conv_1_2, name='max_pool_1')
         
         self.conv_2_1 = self.convBatchnormRelu(self.maxPool_1, 32, 3, name= 'conv_2_1')
@@ -24,27 +26,23 @@ class earlyFusionNetwork:
         
         self.conv_3_1 = self.convBatchnormRelu(self.maxPool_2, 64, 3, name= 'conv_3_1')
         self.conv_3_2 = self.convBatchnormRelu(self.conv_3_1, 64, 3, name= 'conv_3_2')
-        self.conv_3_3 = self.convBatchnormRelu(self.conv_3_2, 64, 3, name= 'conv_3_3')
-        self.maxPool_3= self.max_pool(self.conv_3_3, name='max_pool_3')
+        self.maxPool_3= self.max_pool(self.conv_3_2, name='max_pool_3')
         
         self.conv_4_1 = self.convBatchnormRelu(self.maxPool_3, 128, 3, name= 'conv_4_1')
         self.conv_4_2 = self.convBatchnormRelu(self.conv_4_1, 128, 3, name= 'conv_4_2')
-        self.conv_4_3 = self.convBatchnormRelu(self.conv_4_2, 128, 3, name= 'conv_4_3')
-        self.maxPool_4= self.max_pool(self.conv_4_3, name='max_pool_4')
+        self.maxPool_4= self.max_pool(self.conv_4_2, name='max_pool_4')
         
         self.convT_1 = self.convTranspose2d(self.maxPool_4, 128, 128, name='convT_1')
-        self.concat_1 = self.concat(self.convT_1, self.conv_4_3, ax=-1)
+        self.concat_1 = self.concat(self.convT_1, self.conv_4_2, ax=-1)
         
         self.deconv_1_1 = self.convBatchnormRelu(self.concat_1, 128, 3, name= 'deconv_1_1')
-        self.deconv_1_2 = self.convBatchnormRelu(self.deconv_1_1, 128, 3, name= 'deconv_1_2')
-        self.deconv_1_3 = self.convBatchnormRelu(self.deconv_1_2, 64, 3, name= 'deconv_1_3')
-        self.convT_2= self.convTranspose2d(self.deconv_1_3, 64, 64, name='convT_2')
-        self.concat_2 = self.concat(self.convT_2, self.conv_3_3, ax=-1)
+        self.deconv_1_2 = self.convBatchnormRelu(self.deconv_1_1, 64, 3, name= 'deconv_1_2')
+        self.convT_2= self.convTranspose2d(self.deconv_1_2, 64, 64, name='convT_2')
+        self.concat_2 = self.concat(self.convT_2, self.conv_3_2, ax=-1)
         
         self.deconv_2_1 = self.convBatchnormRelu(self.concat_2, 64, 3, name= 'deconv_2_1')
-        self.deconv_2_2 = self.convBatchnormRelu(self.deconv_2_1, 64, 3, name= 'deconv_2_2')
-        self.deconv_2_3 = self.convBatchnormRelu(self.deconv_2_2, 32, 3, name= 'deconv_2_3')
-        self.convT_3= self.convTranspose2d(self.deconv_2_3, 32, 32, name='convT_3')
+        self.deconv_2_2 = self.convBatchnormRelu(self.deconv_2_1, 32, 3, name= 'deconv_2_2')
+        self.convT_3= self.convTranspose2d(self.deconv_2_2, 32, 32, name='convT_3')
         self.concat_3 = self.concat(self.convT_3, self.conv_2_2, ax=-1)
         
         self.deconv_3_1 = self.convBatchnormRelu(self.concat_3, 32, 3, name= 'deconv_3_1')
@@ -53,9 +51,14 @@ class earlyFusionNetwork:
         self.concat_4 = self.concat(self.convT_4, self.conv_1_2, ax=-1)
         
         self.deconv_4_1 = self.convBatchnormRelu(self.concat_4, 16, 3, name= 'deconv_4_1')
-        self.deconv_4_2 = self.convBatchnormRelu(self.deconv_4_1, 2, 3, name= 'deconv_4_2')
         
+        self.full_one_dropout_3 = self.dropout(self.deconv_4_1, keep_prob=keep_prob)
         
+        self.deconv_4_2 = self.convBatchnormRelu(self.full_one_dropout_3, 8, 3, name= 'deconv_4_2')
+        
+        self.full_one_dropout_4 = self.dropout(self.deconv_4_2, keep_prob=keep_prob)
+        
+        self.deconv_4_3 = self.convBatchnormRelu(self.full_one_dropout_4, 2, 3, name= 'deconv_4_3')
         
         print(("build model finished: %ds" % (time.time() - start_time)))
 
