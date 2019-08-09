@@ -103,7 +103,7 @@ class batcher:
         self.dt = itype
         self.nor= normalize
         
-    def buildBatches(self, listIm1, listIm2, labels, hStep=1, wStep=1, aug = ['flipv', 'fliph', 'flipflip', 'reflect0', 'reflect1', 'reflect2', 'reflect3'] ):
+    def buildBatches(self, listIm1, listIm2, labels, hStep=1, wStep=1, aug = ['flipv', 'fliph', 'flipflip', 'trans', 'trans1'] ):
         self.Imgs = []
         self.Lbls = []
         self.channelCount = listIm1[0].shape[2]
@@ -189,6 +189,14 @@ class batcher:
                             self.Imgs.append(fliph(flipv(zipped)))
                             self.Lbls.append(fliph(flipv(ll)))
                             
+                        if 'trans' in aug:
+                            self.Imgs.append(rotate_multi(zipped))
+                            self.Lbls.append(rotate_multi(ll))
+                            
+                        if 'trans1' in aug:
+                            self.Imgs.append(flipv(rotate_multi(zipped)))
+                            self.Lbls.append(flipv(rotate_multi(ll)))
+                            
     def giveBatch(self, batchNum ):
         self.batch_idx += batchNum
         if self.batch_idx > len(self.Imgs):
@@ -203,10 +211,10 @@ class batcher:
         return self.Imgs[-1].shape[-1]
     
 bat = batcher(112,112)
-bat.buildBatches(i1, i2, l1, 50, 50)
+bat.buildBatches(i1, i2, l1, 30, 30)
 
 batv = batcher(112,112)
-batv.buildBatches(vi1, vi2, vl1, 100, 100)
+batv.buildBatches(vi1, vi2, vl1, 200, 200)
 
 del i1
 del i2 

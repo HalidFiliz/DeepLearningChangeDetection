@@ -20,10 +20,10 @@ log_dir = './logs'
 model_name= 'EarlyFusion'
 summary_counter = 1
 
-learning_rate  = 0.0012
-epoch = 100
-batch_size = 32
-patience = 8
+learning_rate  = 0.008
+epoch = 200
+batch_size = 64
+patience = 5
 
 width   = 112
 height  = 112
@@ -111,7 +111,7 @@ with tf.Session() as sess:
             for batsi in range(start_batch_id, int((bat.giveSize())/batch_size)):
                 
                 trdata, trlabel = bat.giveBatch(batch_size)
-                _, cl  = sess.run([optimizerc, loss], feed_dict={xi: trdata, xo: trlabel, lr:learning_rate, keep_prob:0.5})            
+                _, cl  = sess.run([optimizerc, loss], feed_dict={xi: trdata, xo: trlabel, lr:learning_rate, keep_prob:0.8})            
 
             train_loss.append(cl)
             
@@ -132,9 +132,9 @@ with tf.Session() as sess:
             
             start_batch_id = 0
             summary_counter += 1
-            if v_loss < best_loss:
+            if cl < best_loss:
                 print("best loss is " + str(v_loss))
-                best_loss = v_loss
+                best_loss = cl
                 valid_good_loss.append(v_loss)
                 
                 save(checkpoint_dir, summary_counter)

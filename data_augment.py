@@ -83,12 +83,12 @@ def equalizeAdaptHisto(img):
 def histo(img, bins):
     return exposure.histogram(img, nbins = bins)
 
-def rotate_multi(img, angle, interpolation='cubic'):
+def rotate_multi(img):
     c = img.shape[-1]
     retMat = np.zeros( img.shape, img.dtype )
     
     for i in range(c):
-        retMat[:,:,i] = rotate(img[:,:,i], angle, interpolation)
+        retMat[:,:,i] = np.transpose(img[:,:,i])
     
     return retMat
 
