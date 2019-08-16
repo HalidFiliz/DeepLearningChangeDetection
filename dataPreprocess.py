@@ -203,6 +203,19 @@ class batcher:
             self.batch_idx = batchNum
             
         return np.asarray( self.Imgs[self.batch_idx - batchNum : self.batch_idx] ), np.asarray( self.Lbls[self.batch_idx - batchNum:self.batch_idx] )
+
+    def giveRandomBatch(self, batchNum ):
+        datas = []
+        labels= []
+        indices = np.random.choice(len(self.Imgs), batchNum)   
+        for idx in indices:
+            imd = self.Imgs[idx]
+            iml = self.Lbls[idx]
+            
+            datas.append(imd)
+            labels.append(iml)
+            
+        return np.asarray( datas ), np.asarray( labels )
         
     def giveSize(self):
         return len(self.Imgs)
